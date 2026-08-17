@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FinAudit AI</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brandmark">F</div>
+        <div>
+          <div class="brandname">FinAudit AI</div>
+          <div class="brandsub">Financial statement forensics</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="navitem active" data-target="overview">Overview</button>
+        <button class="navitem" data-target="signals">Risk signals</button>
+        <button class="navitem" data-target="financials">Financials</button>
+        <button class="navitem" data-target="filings">Filings</button>
+        <button class="navitem" data-target="news">News</button>
+      </nav>
+
+      <div class="sidecard">
+        <div class="sidecard-label">Data connections</div>
+        <div class="connection"><span class="dot ok"></span> SEC EDGAR</div>
+        <div class="connection" id="marketConnection"><span class="dot"></span> Market data</div>
+        <div class="connection" id="aiConnection"><span class="dot"></span> AI analysis</div>
+      </div>
+
+      <div class="disclaimer">
+        Risk screening only. A high score is not a finding of fraud or manipulation.
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">FORENSIC ACCOUNTING INTELLIGENCE</div>
+          <h1 id="companyTitle">Search a U.S. public company</h1>
+          <div class="subtitle" id="companySubtitle">Live SEC financial data, risk signals, filings and market context</div>
+        </div>
+
+        <div class="searchbox">
+          <input id="tickerInput" value="AAPL" maxlength="8" autocomplete="off" aria-label="Ticker symbol">
+          <button id="analyzeButton">Analyze</button>
+        </div>
+      </header>
+
+      <div id="status" class="status hidden"></div>
+
+      <section id="overview" class="section">
+        <div class="hero-grid">
+          <article class="risk-panel panel">
+            <div class="panel-label">Financial Reporting Risk</div>
+            <div class="risk-wrap">
+              <div class="risk-ring" id="riskRing">
+                <div>
+                  <div class="risk-number" id="riskScore">--</div>
+                  <div class="risk-denom">/ 100</div>
+                </div>
+              </div>
+              <div>
+                <div class="risk-band" id="riskBand">Waiting</div>
+                <div class="risk-caption">Model based accounting anomaly score</div>
+                <div class="coverage">
+                  <div class="coverage-head">
+                    <span>Data coverage</span>
+                    <span id="coverageValue">--</span>
+                  </div>
+                  <div class="track"><div class="fill" id="coverageFill"></div></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="market-panel panel">
+            <div class="panel-label">Market snapshot</div>
+            <div class="market-row">
+              <div>
+                <div class="market-price" id="marketPrice">Not connected</div>
+                <div class="market-change" id="marketChange">Add Finnhub key for live quote</div>
+              </div>
+              <div class="market-meta">
+                <div><span>Open</span><strong id="marketOpen">--</strong></div>
+                <div><span>Day high</span><strong id="marketHigh">--</strong></div>
+                <div><span>Day low</span><strong id="marketLow">--</strong></div>
+                <div><span>Prev close</span><strong id="marketPrev">--</strong></div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="metric-grid">
+          <article class="metric-card">
+            <div class="metric-label">Revenue growth</div>
+            <div class="metric-value" id="revenueGrowth">--</div>
+            <div class="metric-note">Latest annual filing</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">Receivable divergence</div>
+            <div class="metric-value" id="arDivergence">--</div>
+            <div class="metric-note">AR growth less revenue growth</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">Cash conversion</div>
+            <div class="metric-value" id="cashConversion">--</div>
+            <div class="metric-note">Operating cash flow / net income</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">SBC / revenue</div>
+            <div class="metric-value" id="sbcRatio">--</div>
+            <div class="metric-note">Share based compensation intensity</div>
+          </article>
+        </div>
+
+        <div class="two-col">
+          <article class="panel">
+            <div class="section-head">
+              <div>
+                <div class="panel-label">Category risk</div>
+                <h2>Where the score is coming from</h2>
+              </div>
+            </div>
+            <div id="categoryBars" class="category-bars"></div>
+          </article>
+
+          <article class="panel">
+            <div class="section-head">
+              <div>
+                <div class="panel-label">AI review</div>
+                <h2>Analyst assessment</h2>
+              </div>
+              <button class="secondary" id="aiButton">Generate</button>
+            </div>
+            <div id="aiSummary" class="ai-summary">
+              Connect an OpenAI API key to generate a filing aware explanation of the numerical signals.
+            </div>
+            <div id="aiUsagePanel" class="ai-usage-panel hidden">
+  <div class="ai-usage-title">AI Usage</div>
+
+  <div class="ai-usage-grid">
+    <div>
+      <span>Model</span>
+      <strong id="aiUsageModel">--</strong>
+    </div>
+
+    <div>
+      <span>Input tokens</span>
+      <strong id="aiInputTokens">--</strong>
+    </div>
+
+    <div>
+      <span>Cached input</span>
+      <strong id="aiCachedTokens">--</strong>
+    </div>
+
+    <div>
+      <span>Output tokens</span>
+      <strong id="aiOutputTokens">--</strong>
+    </div>
+
+    <div>
+      <span>Total tokens</span>
+      <strong id="aiTotalTokens">--</strong>
+    </div>
+
+    <div>
+      <span>Estimated cost</span>
+      <strong id="aiEstimatedCost">--</strong>
+    </div>
+  </div>
+</div>
+          </article>
+        </div>
+      </section>
+
+      <section id="signals" class="section">
+        <div class="section-head">
+          <div>
+            <div class="panel-label">DETECTION ENGINE</div>
+            <h2>Accounting risk signals</h2>
+          </div>
+          <div class="legend">
+            <span><i class="sev low"></i> Low</span>
+            <span><i class="sev elevated"></i> Elevated</span>
+            <span><i class="sev high"></i> High</span>
+          </div>
+        </div>
+        <div id="signalList" class="signal-list"></div>
+      </section>
+
+      <section id="financials" class="section">
+        <div class="panel chart-panel">
+          <div class="section-head">
+            <div>
+              <div class="panel-label">HISTORICAL TREND</div>
+              <h2>Revenue and operating cash flow</h2>
+            </div>
+          </div>
+          <canvas id="financialChart"></canvas>
+        </div>
+
+        <div class="panel table-panel">
+          <div class="section-head">
+            <div>
+              <div class="panel-label">XBRL HISTORY</div>
+              <h2>Core accounting facts</h2>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table id="financialTable">
+              <thead>
+                <tr>
+                  <th>Fiscal year</th>
+                  <th>Revenue</th>
+                  <th>Receivables</th>
+                  <th>Inventory</th>
+                  <th>Net income</th>
+                  <th>Operating cash flow</th>
+                  <th>Assets</th>
+                  <th>Goodwill</th>
+                  <th>Stock comp</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="filings" class="section">
+        <div class="section-head">
+          <div>
+            <div class="panel-label">SEC EDGAR</div>
+            <h2>Recent financial filings</h2>
+          </div>
+        </div>
+        <div id="filingsList" class="filing-list"></div>
+      </section>
+
+      <section id="news" class="section">
+        <div class="section-head">
+          <div>
+            <div class="panel-label">MARKET CONTEXT</div>
+            <h2>Recent company news</h2>
+          </div>
+        </div>
+        <div id="newsList" class="news-list"></div>
+      </section>
+
+      <footer>
+        FinAudit AI uses public SEC filing data and configurable market and AI services.
+      </footer>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
